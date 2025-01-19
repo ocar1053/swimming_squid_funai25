@@ -1,5 +1,6 @@
 import copy
 import json
+import time
 import os.path
 
 import pygame
@@ -37,6 +38,7 @@ class SwimmingSquid(PaiaGame):
             self,
             level: int = -1,
             level_file: str = "",
+            contest: int = 0,
             *args, **kwargs):
         super().__init__(user_num=1)
         self.game_result_state = GameResultState.UN_PASSED
@@ -48,7 +50,10 @@ class SwimmingSquid(PaiaGame):
 
         self._game_params = None
         self._sounds = []
+        self.contest = contest
+        self.timerDuration = 300
         self._init_game()
+        self.start_time  = time.time()
 
     def _init_game_by_file(self, level_file_path: str):
         try:
@@ -108,20 +113,23 @@ class SwimmingSquid(PaiaGame):
             action = ai_1p_cmd[0]
         else:
             action = "NONE"
+        if(time.time()- self.start_time > self.timerDuration and self.contest):   
+            self.squid.update(["NONE"])
+        else:
+        
+            self.squid.update(action)
+            revise_squid_coordinate(self.squid, self.playground)
+            # update sprite
+            self.foods.update(playground=self.playground, squid=self.squid)
+            self._help_texts.update()
+            # handle collision
 
-        self.squid.update(action)
-        revise_squid_coordinate(self.squid, self.playground)
-        # update sprite
-        self.foods.update(playground=self.playground, squid=self.squid)
-        self._help_texts.update()
-        # handle collision
+            self._check_foods_collision()
+            # self._timer = round(time.time() - self._begin_time, 3)
 
-        self._check_foods_collision()
-        # self._timer = round(time.time() - self._begin_time, 3)
-
-        self.frame_count += 1
-        self._frame_count_down = self._frame_limit - self.frame_count
-        # self.draw()
+            self.frame_count += 1
+            self._frame_count_down = self._frame_limit - self.frame_count
+            # self.draw()
 
         if not self.is_running:
             return "RESET"
